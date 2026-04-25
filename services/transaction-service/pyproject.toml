@@ -9,7 +9,11 @@ dependencies = [
     "asyncpg>=0.30",
     "pydantic-settings>=2.6",
     "aiokafka>=0.11",
+    "shared",
 ]
+
+[tool.uv.sources]
+shared = { path = "../../shared" }
 
 [dependency-groups]
 dev = [
@@ -20,4 +24,4 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-pythonpath = [".", "../.."]
+pythonpath = ["."]
