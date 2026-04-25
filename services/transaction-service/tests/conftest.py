@@ -8,11 +8,17 @@ from app.db.session import get_session
 from app.main import app
 from app.models import Base
 
-TEST_DATABASE_URL = "postgresql+asyncpg://admin:password@localhost/fraud_db"
+TEST_DATABASE_URL = "postgresql+asyncpg://admin:password@localhost:5433/fraud_db"
 
 
 @pytest.fixture
-async def client():
+def publish_mock():
+    with patch("app.routes.transactions.producer_manager.publish", new_callable=AsyncMock) as m:
+        yield m
+
+
+@pytest.fixture
+async def client(publish_mock):
     engine = create_async_engine(TEST_DATABASE_URL)
     TestSession = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -26,9 +32,8 @@ async def client():
 
     app.dependency_overrides[get_session] = override_get_session
 
-    with patch("app.routes.transactions.producer_manager.publish", new_callable=AsyncMock):
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            yield c
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
 
     app.dependency_overrides.clear()
 
