@@ -1,5 +1,3 @@
-import pytest
-
 VALID_TX = {
     "user_id": 1,
     "amount": "1000.00",
@@ -52,3 +50,20 @@ async def test_health(client):
     resp = await client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["database"] == "connected"
+
+
+async def test_kafka_publish_called_with_correct_args(client, publish_mock):
+    await client.post("/transactions", json=VALID_TX)
+
+    publish_mock.assert_called_once()
+    topic, event = publish_mock.call_args[0]
+    assert topic == "tx.raw"
+    assert str(event.amount) == "1000.00"
+    assert event.user_id == 1
+    assert event.currency == "RUB"
+
+
+async def test_kafka_down_still_returns_202(client, publish_mock):
+    publish_mock.side_effect = Exception("Kafka unavailable")
+    resp = await client.post("/transactions", json=VALID_TX)
+    assert resp.status_code == 202
