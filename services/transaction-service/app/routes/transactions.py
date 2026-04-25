@@ -1,13 +1,14 @@
 import uuid
-from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
+from app.kafka.producer import producer_manager
 from app.models import Transaction
 from app.schemas import TransactionCreate, TransactionResponse
+from shared.schemas import TransactionEvent
 
 router = APIRouter(prefix="/transactions", tags=["Транзакции"])
 
@@ -33,7 +34,20 @@ async def create_transaction(
         merchant=body.merchant,
     )
     session.add(tx)
-    await session.commit()
+    await session.commit()  # 1. сначала БД
+
+    event = TransactionEvent(
+        transaction_id=tx.id,
+        user_id=tx.user_id,
+        amount=tx.amount,
+        currency=tx.currency,
+        country=tx.country,
+        city=tx.city,
+        merchant=tx.merchant,
+        created_at=tx.created_at,
+    )
+    await producer_manager.publish("tx.raw", event)  # 2. потом Kafka
+
     return TransactionResponse.model_validate(tx)
 
 
