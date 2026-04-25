@@ -46,7 +46,10 @@ async def create_transaction(
         merchant=tx.merchant,
         created_at=tx.created_at,
     )
-    await producer_manager.publish("tx.raw", event)  # 2. потом Kafka
+    try:
+        await producer_manager.publish("tx.raw", event)  # 2. потом Kafka — best-effort
+    except Exception:
+        pass  # транзакция в БД сохранена, Kafka временно недоступна
 
     return TransactionResponse.model_validate(tx)
 
