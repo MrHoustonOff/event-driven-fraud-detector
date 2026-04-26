@@ -6,4 +6,4 @@ WORKDIR /app/services/fraud-detector
 COPY services/fraud-detector/pyproject.toml services/fraud-detector/uv.lock* ./
 RUN uv sync --frozen --no-dev
 COPY services/fraud-detector/app/ ./app/
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

@@ -6,4 +6,4 @@ WORKDIR /app/services/limits-service
 COPY services/limits-service/pyproject.toml services/limits-service/uv.lock* ./
 RUN uv sync --frozen --no-dev
 COPY services/limits-service/app/ ./app/
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]

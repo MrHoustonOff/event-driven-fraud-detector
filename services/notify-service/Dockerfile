@@ -6,4 +6,4 @@ WORKDIR /app/services/notify-service
 COPY services/notify-service/pyproject.toml services/notify-service/uv.lock* ./
 RUN uv sync --frozen --no-dev
 COPY services/notify-service/app/ ./app/
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]

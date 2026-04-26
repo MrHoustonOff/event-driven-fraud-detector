@@ -58,6 +58,12 @@ services:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
     networks: [fraud-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   fraud-detector:
     build:
@@ -71,6 +77,12 @@ services:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
     networks: [fraud-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   limits-service:
     build:
@@ -84,6 +96,12 @@ services:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
     networks: [fraud-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   notify-service:
     build:
@@ -93,11 +111,17 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://admin:${POSTGRES_PASSWORD}@postgres/fraud_db
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      WEBHOOK_URL: ${WEBHOOK_URL}
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://localhost:9999/notify}
     depends_on:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
     networks: [fraud-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   admin-api:
     build:
@@ -112,6 +136,12 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
     networks: [fraud-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8004/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   fraud-net:
