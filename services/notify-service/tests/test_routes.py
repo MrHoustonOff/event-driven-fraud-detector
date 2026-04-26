@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import insert
@@ -14,10 +16,13 @@ async def test_get_notifications_empty(client: AsyncClient):
 
 # Test 2: seeded records returned in DESC order
 async def test_get_notifications_returns_records(client: AsyncClient, db_session):
+    now = datetime.now(timezone.utc)
     await db_session.execute(
         insert(Notification).values([
-            {"user_id": 1, "notification_type": "fraud_alert", "payload": {"score": 75}, "status": "sent"},
-            {"user_id": 1, "notification_type": "limit_exceeded", "payload": {"type": "daily"}, "status": "sent"},
+            {"user_id": 1, "notification_type": "fraud_alert", "payload": {"score": 75}, "status": "sent",
+             "created_at": now - timedelta(seconds=10)},   # older
+            {"user_id": 1, "notification_type": "limit_exceeded", "payload": {"type": "daily"}, "status": "sent",
+             "created_at": now},                           # newer → first in DESC
         ])
     )
     await db_session.commit()
@@ -26,7 +31,7 @@ async def test_get_notifications_returns_records(client: AsyncClient, db_session
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) == 2
-    assert data[0]["notification_type"] == "limit_exceeded"  # DESC — последняя вставленная первая
+    assert data[0]["notification_type"] == "limit_exceeded"
 
 
 # Test 3: filters by user_id — other users not returned
