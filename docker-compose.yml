@@ -60,7 +60,9 @@ services:
     networks: [fraud-net]
 
   fraud-detector:
-    build: ./services/fraud-detector
+    build:
+      context: .
+      dockerfile: services/fraud-detector/Dockerfile
     ports: ["8001:8001"]
     environment:
       DATABASE_URL: postgresql+asyncpg://admin:${POSTGRES_PASSWORD}@postgres/fraud_db
