@@ -86,7 +86,9 @@ services:
     networks: [fraud-net]
 
   notify-service:
-    build: ./services/notify-service
+    build:
+      context: .
+      dockerfile: services/notify-service/Dockerfile
     ports: ["8003:8003"]
     environment:
       DATABASE_URL: postgresql+asyncpg://admin:${POSTGRES_PASSWORD}@postgres/fraud_db
