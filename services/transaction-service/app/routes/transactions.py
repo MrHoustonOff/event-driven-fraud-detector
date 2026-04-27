@@ -1,6 +1,8 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
+from prometheus_client import Counter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +11,13 @@ from app.kafka.producer import producer_manager
 from app.models import Transaction
 from app.schemas import TransactionCreate, TransactionResponse
 from shared.schemas import TransactionEvent
+
+logger = logging.getLogger(__name__)
+
+transactions_processed = Counter(
+    "transactions_processed_total",
+    "Число принятых транзакций",
+)
 
 router = APIRouter(prefix="/transactions", tags=["Транзакции"])
 
@@ -49,8 +58,10 @@ async def create_transaction(
     try:
         await producer_manager.publish("tx.raw", event)  # 2. потом Kafka — best-effort
     except Exception:
-        pass  # транзакция в БД сохранена, Kafka временно недоступна
+        logger.warning("kafka publish failed for tx %s", tx.id)
 
+    transactions_processed.inc()
+    logger.info("transaction accepted id=%s user=%s amount=%s", tx.id, tx.user_id, tx.amount)
     return TransactionResponse.model_validate(tx)
 
 

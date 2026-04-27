@@ -4,6 +4,7 @@ Run: cd services/limits-service && uv run python scripts/seed_limits.py
 Requires DATABASE_URL in .env or environment.
 """
 import asyncio
+import logging
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -24,7 +25,7 @@ async def seed() -> None:
             ).on_conflict_do_nothing(index_elements=["user_id"])
             await conn.execute(stmt)
     await engine.dispose()
-    print("Seeded limits for user_id 1-10.")
+    logging.getLogger(__name__).info("seeded limits for user_id 1-10")
 
 
 if __name__ == "__main__":

@@ -20,9 +20,19 @@ from app.rules import (
     UnusualCityRule,
     VelocityAmountRule,
 )
+from prometheus_client import Counter, Histogram
 from shared.schemas import AlertEvent, TransactionEvent, TransactionStatus
 
 logger = logging.getLogger(__name__)
+
+fraud_alerts = Counter(
+    "fraud_alerts_total",
+    "Число алертов о фроде (score >= 50)",
+)
+processing_time = Histogram(
+    "processing_duration_seconds",
+    "Время обработки транзакции fraud-detector'ом",
+)
 
 _engine = FraudEngine(
     [
@@ -74,8 +84,17 @@ async def handle_message(event: TransactionEvent, session: AsyncSession) -> None
     )
     history = [_to_event(t) for t in rows.scalars().all()]
 
-    score, triggered = await _engine.evaluate(
-        TransactionContext(tx=event, history=history)
+    with processing_time.time():
+        score, triggered = await _engine.evaluate(
+            TransactionContext(tx=event, history=history)
+        )
+
+    logger.info(
+        "evaluated tx=%s user=%s score=%d status=%s",
+        event.transaction_id,
+        event.user_id,
+        score,
+        "BLOCKED" if score >= 70 else "FLAGGED" if score >= 50 else "APPROVED",
     )
 
     if score >= 70:
@@ -93,6 +112,7 @@ async def handle_message(event: TransactionEvent, session: AsyncSession) -> None
     await session.commit()
 
     if score >= 50:
+        fraud_alerts.inc()
         await producer_manager.publish(
             "alerts",
             AlertEvent(
