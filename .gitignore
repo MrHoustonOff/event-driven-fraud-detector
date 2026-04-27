@@ -17,6 +17,7 @@ htmlcov/
 # VS Code
 .vscode/
 
-# Load test raw data (HTML reports and results.md are committed)
+# Load test generated artifacts (results.md is committed, reports are not)
 load-test/results/*.csv
+load-test/results/*.html
 
