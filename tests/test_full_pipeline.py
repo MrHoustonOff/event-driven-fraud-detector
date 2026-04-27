@@ -37,7 +37,7 @@ async def test_normal_transactions_not_blocked():
         for _ in range(10):
             resp = await client.post(f"{TX_URL}/transactions", json=_tx(USER_NORMAL, "500.00"))
             assert resp.status_code == 202
-            ids.append(resp.json()["transaction_id"])
+            ids.append(resp.json()["id"])
 
         await asyncio.sleep(5)
 
@@ -47,14 +47,18 @@ async def test_normal_transactions_not_blocked():
 
 
 # Тест 2: Таиланд + 52000₽ → NewCountry(40) + LargeAmount(30) = 70 → BLOCKED
+# NewCountryRule возвращает 0 при пустой истории — нужен seed в RU чтобы TH стал "новой страной"
 async def test_fraud_transaction_blocked():
     async with httpx.AsyncClient(timeout=30) as client:
+        seed = await client.post(f"{TX_URL}/transactions", json=_tx(USER_FRAUD, "100.00"))
+        assert seed.status_code == 202
+
         resp = await client.post(
             f"{TX_URL}/transactions",
             json=_tx(USER_FRAUD, "52000.00", country="TH", city="Bangkok"),
         )
         assert resp.status_code == 202
-        tx_id = resp.json()["transaction_id"]
+        tx_id = resp.json()["id"]
 
         await asyncio.sleep(5)
 
@@ -88,7 +92,7 @@ async def test_limit_exceeded_blocks_transaction():
 
         resp = await client.post(f"{TX_URL}/transactions", json=_tx(USER_LIMIT, "2000.00"))
         assert resp.status_code == 202
-        tx_id = resp.json()["transaction_id"]
+        tx_id = resp.json()["id"]
 
         await asyncio.sleep(5)
 
