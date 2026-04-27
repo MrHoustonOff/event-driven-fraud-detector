@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: transaction-service
+    static_configs:
+      - targets: ['transaction-service:8000']
+
+  - job_name: fraud-detector
+    static_configs:
+      - targets: ['fraud-detector:8001']
+
+  - job_name: limits-service
+    static_configs:
+      - targets: ['limits-service:8002']
+
+  - job_name: notify-service
+    static_configs:
+      - targets: ['notify-service:8003']
+
+  - job_name: admin-api
+    static_configs:
+      - targets: ['admin-api:8004']
