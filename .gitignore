@@ -17,3 +17,6 @@ htmlcov/
 # VS Code
 .vscode/
 
+# Load test raw data (HTML reports and results.md are committed)
+load-test/results/*.csv
+
