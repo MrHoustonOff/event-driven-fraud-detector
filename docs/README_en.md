@@ -353,3 +353,10 @@ service-name/
 ├── Dockerfile
 └── pyproject.toml
 ```
+
+---
+
+## Pet Project
+
+Built to learn event-driven architecture, Apache Kafka, and microservices in practice.
+Inspired by real-world fraud detection challenges in banking.
